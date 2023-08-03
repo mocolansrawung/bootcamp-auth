@@ -1,14 +1,21 @@
 package user
 
 import (
+	"errors"
+	"strings"
+
 	"github.com/evermos/boilerplate-go/configs"
+	"github.com/evermos/boilerplate-go/shared"
 	"github.com/evermos/boilerplate-go/shared/failure"
+	"github.com/golang-jwt/jwt"
+	"github.com/spf13/viper"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type UserService interface {
 	RegisterUser(requestFormat UserRequestFormat) (user User, err error)
 	Login(requestFormat LoginRequestFormat) (ul UserLogin, err error)
+	ParseTokenFromAuthHeader(authHeader string) (user User, err error)
 }
 
 type UserServiceImpl struct {
@@ -70,6 +77,37 @@ func (s *UserServiceImpl) Login(requestFormat LoginRequestFormat) (ul UserLogin,
 	ul.Role = user.Role
 
 	return ul, nil
+}
+
+// Parsing Token
+func (s *UserServiceImpl) ParseTokenFromAuthHeader(authHeader string) (user User, err error) {
+	if !strings.HasPrefix(authHeader, "Bearer ") {
+		return user, failure.BadRequest(err)
+	}
+
+	viper.AutomaticEnv()
+	secret := viper.GetString("SECRET")
+
+	tokenPart := strings.TrimPrefix(authHeader, "Bearer ")
+	claims := &shared.Claims{}
+	token, err := jwt.ParseWithClaims(tokenPart, claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte(secret), nil
+	})
+
+	if err != nil {
+		return user, err
+	}
+
+	if token.Valid {
+		user, err = s.UserRepository.ResolveByUsername(claims.Username)
+		if err != nil {
+			return user, err
+		}
+
+		return user, nil
+	}
+
+	return user, errors.New("invalid token")
 }
 
 // Internal Functions

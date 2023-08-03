@@ -127,6 +127,7 @@ func (r *UserRepositoryMySQL) ResolveByUsername(username string) (user User, err
 	return
 }
 
+// ExistByID
 func (r *UserRepositoryMySQL) ExistsByID(id uuid.UUID) (exists bool, err error) {
 	err = r.DB.Read.Get(
 		&exists,
@@ -140,6 +141,7 @@ func (r *UserRepositoryMySQL) ExistsByID(id uuid.UUID) (exists bool, err error) 
 	return
 }
 
+// ExistByUsername
 func (r *UserRepositoryMySQL) ExistByUsername(username string) (exists bool, err error) {
 	err = r.DB.Read.Get(
 		&exists,

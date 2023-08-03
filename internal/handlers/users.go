@@ -28,6 +28,7 @@ func (h *UserHandler) Router(r chi.Router) {
 		r.Group(func(r chi.Router) {
 			r.Post("/register", h.RegisterUser)
 			r.Post("/login", h.LoginUser)
+			r.Get("/validate", h.ValidateAuth)
 		})
 	})
 }
@@ -78,4 +79,15 @@ func (h *UserHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.WithJSON(w, http.StatusOK, ul)
+}
+
+func (h *UserHandler) ValidateAuth(w http.ResponseWriter, r *http.Request) {
+	authHeader := r.Header.Get("Authorization")
+	user, err := h.UserService.ParseTokenFromAuthHeader(authHeader)
+	if err != nil {
+		response.WithError(w, failure.Unauthorized("Token not authorized"))
+		return
+	}
+
+	response.WithJSON(w, http.StatusOK, user)
 }
