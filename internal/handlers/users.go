@@ -10,6 +10,7 @@ import (
 	"github.com/evermos/boilerplate-go/transport/http/middleware"
 	"github.com/evermos/boilerplate-go/transport/http/response"
 	"github.com/go-chi/chi"
+	"github.com/gofrs/uuid"
 )
 
 type UserHandler struct {
@@ -113,5 +114,21 @@ func (h *UserHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("userID").(uuid.UUID)
 
+	decoder := json.NewDecoder(r.Body)
+	var requestFormat user.UserRequestFormat
+	err := decoder.Decode(&requestFormat)
+	if err != nil {
+		response.WithError(w, failure.BadRequest(err))
+		return
+	}
+
+	user, err := h.UserService.Update(userID, requestFormat, userID)
+	if err != nil {
+		response.WithError(w, failure.InternalError(err))
+		return
+	}
+
+	response.WithJSON(w, http.StatusOK, user)
 }

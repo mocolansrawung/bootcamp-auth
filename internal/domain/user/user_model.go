@@ -85,6 +85,16 @@ func (u User) ToResponseFormat() UserResponseFormat {
 	return resp
 }
 
+func (u *User) Update(req UserRequestFormat, userID uuid.UUID) (err error) {
+	u.Name = req.Name
+	u.UpdatedAt = null.TimeFrom(time.Now())
+	u.UpdatedBy = nuuid.From(userID)
+
+	err = u.Validate()
+
+	return
+}
+
 type UserRequestFormat struct {
 	Username string `json:"username" validate:"required"`
 	Name     string `json:"name" validate:"required"`

@@ -41,6 +41,7 @@ func (a *Authentication) ClientCredentialWithJWT(next http.Handler) http.Handler
 		}
 
 		ctx := context.WithValue(r.Context(), "username", claims.Username)
+		ctx = context.WithValue(ctx, "userID", claims.UserID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

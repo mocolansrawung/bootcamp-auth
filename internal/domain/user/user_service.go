@@ -7,6 +7,7 @@ import (
 	"github.com/evermos/boilerplate-go/configs"
 	"github.com/evermos/boilerplate-go/shared"
 	"github.com/evermos/boilerplate-go/shared/failure"
+	"github.com/gofrs/uuid"
 	"github.com/golang-jwt/jwt"
 	"github.com/spf13/viper"
 	"golang.org/x/crypto/bcrypt"
@@ -17,6 +18,7 @@ type UserService interface {
 	Login(requestFormat LoginRequestFormat) (ul UserLogin, err error)
 	ParseTokenFromAuthHeader(authHeader string) (user User, err error)
 	ResolveByUsername(username string) (user User, err error)
+	Update(id uuid.UUID, requestFormat UserRequestFormat, userID uuid.UUID) (user User, err error)
 }
 
 type UserServiceImpl struct {
@@ -119,6 +121,21 @@ func (s *UserServiceImpl) ResolveByUsername(username string) (user User, err err
 		return user, failure.NotFound("user")
 	}
 
+	return
+}
+
+func (s *UserServiceImpl) Update(id uuid.UUID, requestFormat UserRequestFormat, userID uuid.UUID) (user User, err error) {
+	user, err = s.UserRepository.ResolveByID(id)
+	if err != nil {
+		return
+	}
+
+	err = user.Update(requestFormat, userID)
+	if err != nil {
+		return
+	}
+
+	err = s.UserRepository.Update(user)
 	return
 }
 
