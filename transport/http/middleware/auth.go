@@ -1,9 +1,12 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
+	"strings"
 
 	"github.com/evermos/boilerplate-go/infras"
+	"github.com/evermos/boilerplate-go/shared"
 	"github.com/evermos/boilerplate-go/shared/oauth"
 	"github.com/evermos/boilerplate-go/transport/http/response"
 )
@@ -20,6 +23,26 @@ func ProvideAuthentication(db *infras.MySQLConn) *Authentication {
 	return &Authentication{
 		db: db,
 	}
+}
+
+func (a *Authentication) ClientCredentialWithJWT(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
+			response.WithMessage(w, http.StatusUnauthorized, "Unauthorized")
+			return
+		}
+		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+
+		claims, err := shared.ValidateJWT(tokenString)
+		if err != nil {
+			response.WithMessage(w, http.StatusUnauthorized, "Unauthorized")
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), "username", claims.Username)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 }
 
 func (a *Authentication) ClientCredential(next http.Handler) http.Handler {

@@ -31,6 +31,14 @@ func (h *UserHandler) Router(r chi.Router) {
 			r.Get("/validate", h.ValidateAuth)
 		})
 	})
+
+	r.Route("/profile", func(r chi.Router) {
+		r.Group(func(r chi.Router) {
+			r.Use(h.AuthMiddleware.ClientCredentialWithJWT)
+			r.Get("/", h.GetProfile)
+			r.Put("/", h.UpdateProfile)
+		})
+	})
 }
 
 func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
@@ -90,4 +98,20 @@ func (h *UserHandler) ValidateAuth(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.WithJSON(w, http.StatusOK, user)
+}
+
+func (h *UserHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
+	username := r.Context().Value("username").(string)
+
+	user, err := h.UserService.ResolveByUsername(username)
+	if err != nil {
+		response.WithError(w, failure.NotFound("user"))
+		return
+	}
+
+	response.WithJSON(w, http.StatusOK, user)
+}
+
+func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
+
 }

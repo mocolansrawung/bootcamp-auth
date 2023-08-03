@@ -16,6 +16,7 @@ type UserService interface {
 	RegisterUser(requestFormat UserRequestFormat) (user User, err error)
 	Login(requestFormat LoginRequestFormat) (ul UserLogin, err error)
 	ParseTokenFromAuthHeader(authHeader string) (user User, err error)
+	ResolveByUsername(username string) (user User, err error)
 }
 
 type UserServiceImpl struct {
@@ -108,6 +109,17 @@ func (s *UserServiceImpl) ParseTokenFromAuthHeader(authHeader string) (user User
 	}
 
 	return user, errors.New("invalid token")
+}
+
+//
+func (s *UserServiceImpl) ResolveByUsername(username string) (user User, err error) {
+	user, err = s.UserRepository.ResolveByUsername(username)
+
+	if user.IsDeleted() {
+		return user, failure.NotFound("user")
+	}
+
+	return
 }
 
 // Internal Functions
