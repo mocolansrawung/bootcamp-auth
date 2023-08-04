@@ -16,7 +16,7 @@ import (
 type UserService interface {
 	RegisterUser(requestFormat UserRequestFormat) (user User, err error)
 	Login(requestFormat LoginRequestFormat) (ul UserLogin, err error)
-	ParseTokenFromAuthHeader(authHeader string) (user User, err error)
+	ParseTokenFromAuthHeader(authHeader string) (claims *shared.Claims, err error)
 	ResolveByUsername(username string) (user User, err error)
 	Update(id uuid.UUID, requestFormat UserRequestFormat, userID uuid.UUID) (user User, err error)
 }
@@ -83,37 +83,36 @@ func (s *UserServiceImpl) Login(requestFormat LoginRequestFormat) (ul UserLogin,
 }
 
 // Parsing Token
-func (s *UserServiceImpl) ParseTokenFromAuthHeader(authHeader string) (user User, err error) {
+func (s *UserServiceImpl) ParseTokenFromAuthHeader(authHeader string) (claims *shared.Claims, err error) {
 	if !strings.HasPrefix(authHeader, "Bearer ") {
-		return user, failure.BadRequest(err)
+		return claims, failure.BadRequest(err)
 	}
 
 	viper.AutomaticEnv()
 	secret := viper.GetString("SECRET")
 
 	tokenPart := strings.TrimPrefix(authHeader, "Bearer ")
-	claims := &shared.Claims{}
+	claims = &shared.Claims{}
 	token, err := jwt.ParseWithClaims(tokenPart, claims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(secret), nil
 	})
 
 	if err != nil {
-		return user, err
+		return claims, err
 	}
 
 	if token.Valid {
-		user, err = s.UserRepository.ResolveByUsername(claims.Username)
+		_, err := s.UserRepository.ResolveByUsername(claims.Username)
 		if err != nil {
-			return user, err
+			return claims, err
 		}
 
-		return user, nil
+		return claims, nil
 	}
 
-	return user, errors.New("invalid token")
+	return claims, errors.New("invalid token")
 }
 
-//
 func (s *UserServiceImpl) ResolveByUsername(username string) (user User, err error) {
 	user, err = s.UserRepository.ResolveByUsername(username)
 

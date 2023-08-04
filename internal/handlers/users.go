@@ -92,13 +92,13 @@ func (h *UserHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 
 func (h *UserHandler) ValidateAuth(w http.ResponseWriter, r *http.Request) {
 	authHeader := r.Header.Get("Authorization")
-	user, err := h.UserService.ParseTokenFromAuthHeader(authHeader)
+	claims, err := h.UserService.ParseTokenFromAuthHeader(authHeader)
 	if err != nil {
 		response.WithError(w, failure.Unauthorized("Token not authorized"))
 		return
 	}
 
-	response.WithJSON(w, http.StatusOK, user)
+	response.WithJSON(w, http.StatusOK, claims)
 }
 
 func (h *UserHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
