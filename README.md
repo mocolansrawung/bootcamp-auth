@@ -34,3 +34,7 @@ make run
 Now, you can access the web application at http://localhost:8080 (or whichever port you specified in your .env file).
 
 
+Major Improvements:
+1. fixing validate auth handler to be cleaner and get rid of service parsing function
+2. destructure jwt service to be cleaner, reuse, and maintainable.
+3. fixing the response logic by returning access token for both register and login endpoint
