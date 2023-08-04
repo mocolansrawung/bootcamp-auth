@@ -20,6 +20,7 @@ var (
 			SELECT
 				id,
 				username,
+				name,
 				password,
 				role, 
 				created_at,
