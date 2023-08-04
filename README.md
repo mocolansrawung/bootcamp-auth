@@ -1,49 +1,36 @@
-# PROJECT_TITLE
-This is the name of the project. It describes the whole project in one sentence, and helps people understand what 
-the main goal and aim of the project is.
+# My Go Project
 
-## Project Badges
-Badges aren't necessary, but using them is a simple way of letting other developers know that you know what you're doing.
+This project is a web application written in Go. It follows a clean architecture pattern and uses JWT for authentication. It's an bootcamp auth microservices with a broad features to implement
 
-Having this section can also be helpful to help link to important tools and also show some simple stats about your project 
-like the number of forks, contributors, open issues etc...
+## Prerequisites
 
-Below is sample badges to help users/contributors know build status of this project.
+Make sure you have Go installed on your machine. You can download it from the official [Go website](https://golang.org/dl/).
 
-[![Coverage Status](https://coveralls.io/repos/USERNAME/PROJECT_NAME/badge.svg?branch=master)](https://coveralls.io/r/USERNAME/PROJECT_NAME)
-[![GitHub Stars](https://img.shields.io/github/stars/USERNAME/PROJECT_NAME.svg)]()
-[![Build Status](https://jenkinsx.evermosa2z.com/buildStatus/icon?job=[JOB_NAME]%2Fmaster)](https://jenkinsx.evermosa2z.com/job/[JOB_NAME]/job/master/)
+You will also need to install make. You can download it from the official [GNU Make website](https://www.gnu.org/software/make/).
 
-## Description
+## Installation
 
-This is an important component of your project that many new developers often overlook.
+Follow these steps to get the project up and running:
 
-Your description is an extremely important aspect of your project. A well-crafted description allows you to show off 
-your work to other developers as well as potential employers.
+1. Clone the repository to your local machine.
+
+git clone https://github.com/mocolansrawung/bootcamp-auth.git
+cd repo
 
 
-## System Requirement
+2. Install the Go module dependencies.
 
-Describe here the system requirements and dependencies for this project.
+go mod tidy
 
-## Setup and Installation
 
-If you are working on a project that a user needs to install or run locally in a machine, 
-you should include the steps required to install your project and also the required dependencies if any.
+3. Setup your environment variables. Copy the example `.env.example` file to a new file named `.env` and replace the placeholder values with your actual values.
 
-Provide a step-by-step description of how to get the development environment set and running.
 
-## Run and Test
+4. Run the application. The `make run` command will start the server.
 
-This section describe on how to run your project. Go the extra mile and write tests for your application. 
-Then provide code examples and how to run them.
+make run
 
-This will help show that you are certain and confident that your project will work without any challenges, 
-which will give other people confidence in it, too
 
-## Contributing
+Now, you can access the web application at http://localhost:8080 (or whichever port you specified in your .env file).
 
-This section describe on how to contribute to this project, for example :
-* pull request procedure
-* create issue procedure
-* etc
+
