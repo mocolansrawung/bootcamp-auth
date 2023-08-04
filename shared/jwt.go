@@ -7,7 +7,6 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/golang-jwt/jwt"
-	"github.com/spf13/viper"
 )
 
 type Claims struct {
@@ -17,10 +16,17 @@ type Claims struct {
 	jwt.StandardClaims
 }
 
-func GenerateJWT(userID uuid.UUID, username string, role string) (string, error) {
-	viper.AutomaticEnv()
-	secret := viper.GetString("SECRET")
+type JWTService struct {
+	Secret string
+}
 
+func ProvideJWTService(secret string) *JWTService {
+	return &JWTService{
+		Secret: secret,
+	}
+}
+
+func (j *JWTService) GenerateJWT(userID uuid.UUID, username string, role string) (string, error) {
 	claims := Claims{
 		UserID:   userID,
 		Username: username,
@@ -32,7 +38,7 @@ func GenerateJWT(userID uuid.UUID, username string, role string) (string, error)
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString([]byte(secret))
+	tokenString, err := token.SignedString([]byte(j.Secret))
 	if err != nil {
 		return "", err
 	}
@@ -40,12 +46,9 @@ func GenerateJWT(userID uuid.UUID, username string, role string) (string, error)
 	return tokenString, nil
 }
 
-func ValidateJWT(tokenString string) (*Claims, error) {
-	viper.AutomaticEnv()
-	secret := viper.GetString("SECRET")
-
+func (j *JWTService) ValidateJWT(tokenString string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte(secret), nil
+		return []byte(j.Secret), nil
 	})
 	if err != nil {
 		return nil, fmt.Errorf("JWT validation failed: %v", err)

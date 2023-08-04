@@ -22,7 +22,7 @@ type Config struct {
 		Name     string `mapstructure:"NAME"`
 		Revision string `mapstructure:"REVISION"`
 		URL      string `mapstructure:"URL"`
-		SECRET   string `mapstructure:"SECRET"`
+		Secret   string `mapstructure:"SECRET"`
 	}
 
 	Cache struct {

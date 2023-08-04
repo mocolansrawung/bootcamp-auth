@@ -1,22 +1,16 @@
 package user
 
 import (
-	"errors"
-	"strings"
-
 	"github.com/evermos/boilerplate-go/configs"
 	"github.com/evermos/boilerplate-go/shared"
 	"github.com/evermos/boilerplate-go/shared/failure"
 	"github.com/gofrs/uuid"
-	"github.com/golang-jwt/jwt"
-	"github.com/spf13/viper"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type UserService interface {
 	RegisterUser(requestFormat UserRequestFormat) (user User, err error)
 	Login(requestFormat LoginRequestFormat) (ul UserLogin, err error)
-	ParseTokenFromAuthHeader(authHeader string) (claims *shared.Claims, err error)
 	ResolveByUsername(username string) (user User, err error)
 	Update(id uuid.UUID, requestFormat UserRequestFormat, userID uuid.UUID) (user User, err error)
 }
@@ -34,83 +28,48 @@ func ProvideUserServiceImpl(userRepository UserRepository, config *configs.Confi
 	return s
 }
 
-// Register User
-func (s *UserServiceImpl) RegisterUser(requestFormat UserRequestFormat) (user User, err error) {
+func (s *UserServiceImpl) RegisterUser(requestFormat UserRequestFormat) (accessToken string, err error) {
+	var user User
 	user, err = user.NewUserFromRequestFormat(requestFormat)
 	if err != nil {
-		return
-	}
-
-	if err != nil {
-		return user, failure.BadRequest(err)
+		return "", err
 	}
 
 	err = s.UserRepository.CreateUser(user)
-
 	if err != nil {
-		return
+		return "", err
 	}
 
-	return
+	accessToken, err = s.createToken(user)
+	if err != nil {
+		return "", err
+	}
+
+	return accessToken, nil
 }
 
-// Login
-func (s *UserServiceImpl) Login(requestFormat LoginRequestFormat) (ul UserLogin, err error) {
+func (s *UserServiceImpl) Login(requestFormat LoginRequestFormat) (accessToken string, err error) {
 	login, err := UserLogin{}.LoginUserFromRequestFormat(requestFormat)
 	if err != nil {
-		return
+		return "", err
 	}
 
 	user, err := s.UserRepository.ResolveByUsername(login.Username)
 	if err != nil {
-		return
-	}
-
-	if err != nil {
-		return ul, failure.NotFound("user")
+		return "", err
 	}
 
 	isValidPassword := checkPasswordHash(login.Password, user.Password)
 	if !isValidPassword {
-		return ul, failure.Unauthorized("Invalid credentials")
+		return "", failure.Unauthorized("Invalid credentials")
 	}
 
-	ul.ID = user.ID
-	ul.Username = user.Username
-	ul.Role = user.Role
-
-	return ul, nil
-}
-
-// Parsing Token
-func (s *UserServiceImpl) ParseTokenFromAuthHeader(authHeader string) (claims *shared.Claims, err error) {
-	if !strings.HasPrefix(authHeader, "Bearer ") {
-		return claims, failure.BadRequest(err)
-	}
-
-	viper.AutomaticEnv()
-	secret := viper.GetString("SECRET")
-
-	tokenPart := strings.TrimPrefix(authHeader, "Bearer ")
-	claims = &shared.Claims{}
-	token, err := jwt.ParseWithClaims(tokenPart, claims, func(token *jwt.Token) (interface{}, error) {
-		return []byte(secret), nil
-	})
-
+	accessToken, err = s.createToken(user)
 	if err != nil {
-		return claims, err
+		return "", failure.InternalError(err)
 	}
 
-	if token.Valid {
-		_, err := s.UserRepository.ResolveByUsername(claims.Username)
-		if err != nil {
-			return claims, err
-		}
-
-		return claims, nil
-	}
-
-	return claims, errors.New("invalid token")
+	return accessToken, nil
 }
 
 func (s *UserServiceImpl) ResolveByUsername(username string) (user User, err error) {
@@ -141,4 +100,14 @@ func (s *UserServiceImpl) Update(id uuid.UUID, requestFormat UserRequestFormat, 
 // Internal Functions
 func checkPasswordHash(password, hash string) bool {
 	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) == nil
+}
+
+func (s *UserServiceImpl) createToken(user User) (accessToken string, err error) {
+	jwtService := shared.ProvideJWTService(s.Config.App.Secret)
+	accessToken, err = jwtService.GenerateJWT(user.ID, user.Username, user.Role)
+	if err != nil {
+		return
+	}
+
+	return
 }

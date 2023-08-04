@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/evermos/boilerplate-go/configs"
 	"github.com/evermos/boilerplate-go/infras"
 	"github.com/evermos/boilerplate-go/shared"
 	"github.com/evermos/boilerplate-go/shared/oauth"
@@ -12,16 +13,22 @@ import (
 )
 
 type Authentication struct {
-	db *infras.MySQLConn
+	db     *infras.MySQLConn
+	config *configs.Config
+	jwt    shared.JWTService
 }
 
 const (
 	HeaderAuthorization = "Authorization"
 )
 
-func ProvideAuthentication(db *infras.MySQLConn) *Authentication {
+func ProvideAuthentication(db *infras.MySQLConn, config *configs.Config) *Authentication {
 	return &Authentication{
-		db: db,
+		db:     db,
+		config: config,
+		jwt: *shared.ProvideJWTService(
+			config.App.Secret,
+		),
 	}
 }
 
@@ -34,14 +41,13 @@ func (a *Authentication) ClientCredentialWithJWT(next http.Handler) http.Handler
 		}
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 
-		claims, err := shared.ValidateJWT(tokenString)
+		claims, err := a.jwt.ValidateJWT(tokenString)
 		if err != nil {
 			response.WithMessage(w, http.StatusUnauthorized, "Unauthorized")
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), "username", claims.Username)
-		ctx = context.WithValue(ctx, "userID", claims.UserID)
+		ctx := context.WithValue(r.Context(), "claims", claims)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

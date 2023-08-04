@@ -95,7 +95,6 @@ func ProvideUserRepositoryMySQL(db *infras.MySQLConn) *UserRepositoryMySQL {
 	return s
 }
 
-// CreateUser creates a new User
 func (r *UserRepositoryMySQL) CreateUser(user User) (err error) {
 	exists, err := r.ExistsByID(user.ID)
 	if err != nil {
@@ -131,7 +130,6 @@ func (r *UserRepositoryMySQL) CreateUser(user User) (err error) {
 	})
 }
 
-// Resolve a User by ID
 func (r *UserRepositoryMySQL) ResolveByID(id uuid.UUID) (user User, err error) {
 	err = r.DB.Read.Get(
 		&user,
@@ -147,7 +145,6 @@ func (r *UserRepositoryMySQL) ResolveByID(id uuid.UUID) (user User, err error) {
 	return
 }
 
-// Resolve a User by Username
 func (r *UserRepositoryMySQL) ResolveByUsername(username string) (user User, err error) {
 	err = r.DB.Read.Get(
 		&user,
@@ -163,7 +160,6 @@ func (r *UserRepositoryMySQL) ResolveByUsername(username string) (user User, err
 	return
 }
 
-// ExistByID
 func (r *UserRepositoryMySQL) ExistsByID(id uuid.UUID) (exists bool, err error) {
 	err = r.DB.Read.Get(
 		&exists,
@@ -177,7 +173,6 @@ func (r *UserRepositoryMySQL) ExistsByID(id uuid.UUID) (exists bool, err error) 
 	return
 }
 
-// ExistByUsername
 func (r *UserRepositoryMySQL) ExistByUsername(username string) (exists bool, err error) {
 	err = r.DB.Read.Get(
 		&exists,
@@ -191,7 +186,6 @@ func (r *UserRepositoryMySQL) ExistByUsername(username string) (exists bool, err
 	return
 }
 
-// Update updates a User
 func (r *UserRepositoryMySQL) Update(user User) (err error) {
 	exists, err := r.ExistsByID(user.ID)
 	if err != nil {

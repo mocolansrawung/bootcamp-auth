@@ -34,7 +34,6 @@ func (u User) MarshalJSON() ([]byte, error) {
 	return json.Marshal(u.ToResponseFormat())
 }
 
-// Register Request Format
 func (u User) NewUserFromRequestFormat(req UserRequestFormat) (newUser User, err error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
@@ -66,20 +65,17 @@ func (u *User) Validate() (err error) {
 }
 
 func (u User) ToResponseFormat() UserResponseFormat {
-	accessToken, _ := shared.GenerateJWT(u.ID, u.Username, u.Role)
-
 	resp := UserResponseFormat{
-		ID:          u.ID,
-		Username:    u.Username,
-		Name:        u.Name,
-		Role:        u.Role,
-		AccessToken: accessToken,
-		CreatedBy:   u.CreatedBy,
-		CreatedAt:   u.CreatedAt,
-		UpdatedAt:   u.UpdatedAt,
-		UpdatedBy:   u.UpdatedBy.Ptr(),
-		DeletedAt:   u.DeletedAt,
-		DeletedBy:   u.DeletedBy.Ptr(),
+		ID:        u.ID,
+		Username:  u.Username,
+		Name:      u.Name,
+		Role:      u.Role,
+		CreatedBy: u.CreatedBy,
+		CreatedAt: u.CreatedAt,
+		UpdatedAt: u.UpdatedAt,
+		UpdatedBy: u.UpdatedBy.Ptr(),
+		DeletedAt: u.DeletedAt,
+		DeletedBy: u.DeletedBy.Ptr(),
 	}
 
 	return resp
@@ -124,10 +120,6 @@ type UserLogin struct {
 	Role     string    `db:"role"`
 }
 
-func (ul UserLogin) MarshalJSON() ([]byte, error) {
-	return json.Marshal(ul.ToResponseFormat())
-}
-
 func (ul UserLogin) LoginUserFromRequestFormat(req LoginRequestFormat) (newLogin UserLogin, err error) {
 	newLogin = UserLogin{
 		Username: req.Username,
@@ -142,16 +134,6 @@ func (ul UserLogin) LoginUserFromRequestFormat(req LoginRequestFormat) (newLogin
 func (ul *UserLogin) Validate() (err error) {
 	validator := shared.GetValidator()
 	return validator.Struct(ul)
-}
-
-func (ul UserLogin) ToResponseFormat() LoginResponseFormat {
-	accessToken, _ := shared.GenerateJWT(ul.ID, ul.Username, ul.Role)
-
-	resp := LoginResponseFormat{
-		AccessToken: accessToken,
-	}
-
-	return resp
 }
 
 type LoginRequestFormat struct {

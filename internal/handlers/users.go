@@ -57,13 +57,13 @@ func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.UserService.RegisterUser(requestFormat)
+	accessToken, err := h.UserService.RegisterUser(requestFormat)
 	if err != nil {
 		response.WithError(w, err)
 		return
 	}
 
-	response.WithJSON(w, http.StatusCreated, user)
+	response.WithJSON(w, http.StatusCreated, accessToken)
 }
 
 func (h *UserHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
@@ -81,21 +81,23 @@ func (h *UserHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ul, err := h.UserService.Login(requestFormat)
+	accessToken, err := h.UserService.Login(requestFormat)
 	if err != nil {
 		response.WithError(w, err)
 		return
 	}
 
-	response.WithJSON(w, http.StatusOK, ul)
+	responseFormat := user.LoginResponseFormat{
+		AccessToken: accessToken,
+	}
+
+	response.WithJSON(w, http.StatusOK, responseFormat)
 }
 
 func (h *UserHandler) ValidateAuth(w http.ResponseWriter, r *http.Request) {
-	authHeader := r.Header.Get("Authorization")
-	claims, err := h.UserService.ParseTokenFromAuthHeader(authHeader)
-	if err != nil {
+	claims, ok := r.Context().Value("claims").(shared.Claims)
+	if !ok {
 		response.WithError(w, failure.Unauthorized("Token not authorized"))
-		return
 	}
 
 	response.WithJSON(w, http.StatusOK, claims)
