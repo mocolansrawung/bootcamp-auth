@@ -9,8 +9,8 @@ import (
 )
 
 type UserService interface {
-	RegisterUser(requestFormat UserRequestFormat) (user User, err error)
-	Login(requestFormat LoginRequestFormat) (ul UserLogin, err error)
+	RegisterUser(requestFormat UserRequestFormat) (accessToken string, err error)
+	Login(requestFormat LoginRequestFormat) (accessToken string, err error)
 	ResolveByUsername(username string) (user User, err error)
 	Update(id uuid.UUID, requestFormat UserRequestFormat, userID uuid.UUID) (user User, err error)
 }
